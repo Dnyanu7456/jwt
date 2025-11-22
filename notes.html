@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Your Notes</title>
+</head>
+<body style="font-family: Arial; padding: 20px;">
+<h2>Your Notes</h2>
+
+<button onclick="logout()">Logout</button>
+<hr>
+
+<h3>Create Note</h3>
+<input id="note_title" placeholder="Title">
+<input id="note_content" placeholder="Content">
+<button onclick="createNote()">Create</button>
+<p id="note_msg"></p>
+
+<h3>Your Notes</h3>
+<button onclick="getNotes()">Reload Notes</button>
+<ul id="notes_list"></ul>
+
+<script>
+let token = localStorage.getItem("token");
+
+// If not logged in → go back
+if (!token) {
+    window.location.href = "index.html";
+}
+
+// Create note
+async function createNote() {
+    const response = await fetch("http://127.0.0.1:8000/notes/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+            title: document.getElementById("note_title").value,
+            content: document.getElementById("note_content").value
+        })
+    });
+
+    const data = await response.json();
+    document.getElementById("note_msg").innerText = JSON.stringify(data);
+    getNotes();
+}
+
+// Load notes
+async function getNotes() {
+    const response = await fetch("http://127.0.0.1:8000/notes/", {
+        headers: { "Authorization": "Bearer " + token }
+    });
+
+    const notes = await response.json();
+    const list = document.getElementById("notes_list");
+    list.innerHTML = "";
+
+    notes.forEach(note => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+            <b>${note.title}</b> - ${note.content}
+            <button onclick="deleteNote(${note.id})">Delete</button>
+        `;
+        list.appendChild(li);
+    });
+}
+
+// Delete note
+async function deleteNote(id) {
+    await fetch(`http://127.0.0.1:8000/notes/${id}`, {
+        method: "DELETE",
+        headers: {
+            "Authorization": "Bearer " + token
+        }
+    });
+
+    getNotes();
+}
+
+// Logout
+function logout() {
+    localStorage.removeItem("token");
+    window.location.href = "index.html";
+}
+
+getNotes();
+</script>
+
+
+</body>
+</html>

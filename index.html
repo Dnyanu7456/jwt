@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FastAPI Notes - Login/Register</title>
+</head>
+<body style="font-family: Arial; padding: 20px;">
+    <h2>FastAPI Notes App</h2>
+
+    <h3>Register</h3>
+    <input id="reg_username" placeholder="Username"> 
+    <input id="reg_password" placeholder="Password" type="password">
+    <button onclick="register()">Register</button>
+    <p id="reg_msg"></p>
+
+    <h3>Login</h3>
+    <input id="login_username" placeholder="Username">
+    <input id="login_password" placeholder="Password" type="password">
+    <button onclick="login()">Login</button>
+    <p id="login_msg"></p>
+
+<script>
+async function register() {
+    const response = await fetch("http://127.0.0.1:8000/register", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            username: document.getElementById("reg_username").value,
+            password: document.getElementById("reg_password").value
+        })
+    });
+
+    const data = await response.json();
+    document.getElementById("reg_msg").innerText = JSON.stringify(data);
+}
+
+async function login() {
+    const formData = new FormData();
+    formData.append("username", document.getElementById("login_username").value);
+    formData.append("password", document.getElementById("login_password").value);
+
+    const response = await fetch("http://127.0.0.1:8000/token", {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await response.json();
+
+    if (data.access_token) {
+        // save token for next page
+        localStorage.setItem("token", data.access_token);
+
+        document.getElementById("login_msg").innerText = "Login successful!";
+        
+        // Redirect to notes page
+        window.location.href = "notes.html";
+    } else {
+        document.getElementById("login_msg").innerText = "Invalid login!";
+    }
+}
+</script>
+
+</body>
+</html>
